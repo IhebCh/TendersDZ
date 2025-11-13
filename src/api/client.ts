@@ -65,6 +65,8 @@ export async function del<T>(url: string) {
   return res.data;
 }
 
+// src/api/client.ts
+
 interface LoginResponse {
   access_token: string;
   token_type?: string;
@@ -72,13 +74,23 @@ interface LoginResponse {
 }
 
 export async function loginApi(username: string, password: string) {
-  const res = await apiClient.post<LoginResponse>("/auth/login", {
-    username,
-    password
+  const data = new URLSearchParams();
+  data.append("username", username);
+  data.append("password", password);
+  // Optional extras if you ever need them:
+  // data.append("scope", "");
+  // data.append("grant_type", "");
+
+  const res = await apiClient.post<LoginResponse>("/auth/login", data, {
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
   });
+
   if (res.data?.access_token) {
     setAuthToken(res.data.access_token);
   }
+
   return res.data;
 }
 

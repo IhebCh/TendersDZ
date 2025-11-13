@@ -1,20 +1,34 @@
 export type TenderStatus = "draft" | "in_study" | "go" | "submitted" | "won" | "lost";
 
-export interface Tender {
+// src/types/index.ts
+
+// ---- Clients ----
+export interface Client {
   id: number;
-  reference: string;
-  title: string;
-  client_name?: string;
-  status?: TenderStatus;
-  submission_deadline?: string; // ISO string
-  created_at?: string;
+  name: string;
+  contact?: string | null;
+  country?: string | null;
+  notes?: string | null;
 }
 
+// ---- Suppliers ----
+// (aligned to your backend schema, even if not used yet)
 export interface Supplier {
   id: number;
   name: string;
-  country?: string;
-  contact_name?: string;
-  contact_email?: string;
-  contact_phone?: string;
+  contact?: string | null;
+  country?: string | null;
+  is_oem: boolean;
+  verified: boolean;
+}
+
+// ---- Tenders ----
+export interface Tender {
+  id: number;
+  client_id: number;
+  title: string;
+  reference_no?: string | null;
+  currency: string; // "DZD", etc.
+  status: string;   // e.g. "IDENTIFIED", "STUDYING", ...
+  submission_deadline?: string | null; // ISO datetime
 }
