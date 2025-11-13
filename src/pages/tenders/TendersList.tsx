@@ -18,7 +18,7 @@ export function TendersList() {
         setData(res);
       } catch (e) {
         console.error(e);
-        message.error("Failed to load tenders. Check API configuration.");
+        message.error("Failed to load tenders. Check API configuration or login.");
       } finally {
         setLoading(false);
       }

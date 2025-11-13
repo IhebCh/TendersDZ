@@ -1,11 +1,13 @@
-import { Layout, Menu } from "antd";
+import { Layout, Menu, Button } from "antd";
 import {
   FileTextOutlined,
   TeamOutlined,
-  DashboardOutlined
+  DashboardOutlined,
+  LogoutOutlined
 } from "@ant-design/icons";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ReactNode } from "react";
+import { getAuthToken, logout } from "../../api/client";
 
 const { Header, Sider, Content } = Layout;
 
@@ -15,12 +17,28 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const selectedKey = (() => {
     if (location.pathname.startsWith("/tenders")) return "tenders";
     if (location.pathname.startsWith("/suppliers")) return "suppliers";
     return "dashboard";
   })();
+
+  const isLogin = location.pathname.startsWith("/login");
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const layoutContent = (
+    <Content className="app-content">{children}</Content>
+  );
+
+  if (isLogin) {
+    return <Layout style={{ minHeight: "100vh" }}>{layoutContent}</Layout>;
+  }
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -70,8 +88,17 @@ export function AppLayout({ children }: AppLayoutProps) {
           }}
         >
           <span style={{ fontWeight: 500 }}>Tender Management MVP</span>
+          {getAuthToken() && (
+            <Button
+              icon={<LogoutOutlined />}
+              size="small"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          )}
         </Header>
-        <Content className="app-content">{children}</Content>
+        {layoutContent}
       </Layout>
     </Layout>
   );
