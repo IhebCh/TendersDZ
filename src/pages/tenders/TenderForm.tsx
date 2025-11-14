@@ -1,20 +1,9 @@
-// src/pages/tenders/TenderForm.tsx
-
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  Button,
-  DatePicker,
-  Form,
-  Input,
-  Select,
-  Space,
-  message,
-  InputNumber,
-} from "antd";
+import { Button, DatePicker, Form, Input, Select, Space, message } from "antd";
 import dayjs from "dayjs";
 import { PageHeader } from "../../components/common/PageHeader";
-import type { Tender, Client } from "../../types";
+import type { Tender, TenderStatus } from "../../types";
 import { get, post, put } from "../../api/client";
 
 const { Option } = Select;
@@ -25,37 +14,12 @@ interface Props {
   mode: Mode;
 }
 
-interface TenderFormValues {
-  client_id: number;
-  title: string;
-  reference_no?: string;
-  currency?: string;
-  status?: string;
-  submission_deadline?: dayjs.Dayjs;
-}
-
 export function TenderForm({ mode }: Props) {
-  const [form] = Form.useForm<TenderFormValues>();
+  const [form] = Form.useForm();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
-  const [clients, setClients] = useState<Client[]>([]);
 
-  // Load clients for the select
-  useEffect(() => {
-    const loadClients = async () => {
-      try {
-        const res = await get<Client[]>("/clients/");
-        setClients(res);
-      } catch (e) {
-        console.error(e);
-        message.error("Failed to load clients.");
-      }
-    };
-    loadClients();
-  }, []);
-
-  // Load existing tender data when editing
   useEffect(() => {
     if (mode === "edit" && id) {
       const load = async () => {
@@ -63,14 +27,13 @@ export function TenderForm({ mode }: Props) {
           setLoading(true);
           const data = await get<Tender>(`/tenders/${id}`);
           form.setFieldsValue({
-            client_id: data.client_id,
+            reference: data.reference,
             title: data.title,
-            reference_no: data.reference_no ?? undefined,
-            currency: data.currency,
+            client_name: data.client_name,
             status: data.status,
             submission_deadline: data.submission_deadline
               ? dayjs(data.submission_deadline)
-              : undefined,
+              : undefined
           });
         } catch (e) {
           console.error(e);
@@ -83,17 +46,15 @@ export function TenderForm({ mode }: Props) {
     }
   }, [mode, id, form]);
 
-  const handleFinish = async (values: TenderFormValues) => {
-    // Build payload exactly like TenderCreate in backend
-    const payload = {
-      client_id: values.client_id,
+  const handleFinish = async (values: any) => {
+    const payload: Partial<Tender> = {
+      reference: values.reference,
       title: values.title,
-      reference_no: values.reference_no ?? null,
-      currency: values.currency ?? "DZD",
-      status: values.status ?? "IDENTIFIED",
+      client_name: values.client_name,
+      status: values.status as TenderStatus,
       submission_deadline: values.submission_deadline
         ? values.submission_deadline.toISOString()
-        : null,
+        : undefined
     };
 
     try {
@@ -108,7 +69,7 @@ export function TenderForm({ mode }: Props) {
       navigate("/tenders");
     } catch (e) {
       console.error(e);
-      message.error("Failed to save tender. Check payload / API logs.");
+      message.error("Failed to save tender. Check API or payload.");
     } finally {
       setLoading(false);
     }
@@ -120,71 +81,45 @@ export function TenderForm({ mode }: Props) {
         title={mode === "create" ? "New tender" : "Edit tender"}
         breadcrumbItems={[
           { label: "Tenders" },
-          { label: mode === "create" ? "New" : "Edit" },
+          { label: mode === "create" ? "New" : "Edit" }
         ]}
       />
-      <Form<TenderFormValues>
+      <Form
         form={form}
         layout="vertical"
         onFinish={handleFinish}
         style={{ maxWidth: 600 }}
-        initialValues={{
-          currency: "DZD",
-          status: "IDENTIFIED",
-        }}
       >
         <Form.Item
-          name="client_id"
-          label="Client"
-          rules={[{ required: true, message: "Client is required" }]}
+          name="reference"
+          label="Reference"
+          rules={[{ required: true, message: "Reference is required" }]}
         >
-          <Select
-            placeholder="Select client"
-            showSearch
-            optionFilterProp="children"
-          >
-            {clients.map((c) => (
-              <Option key={c.id} value={c.id}>
-                {c.name} (id: {c.id})
-              </Option>
-            ))}
-          </Select>
+          <Input placeholder="AO-01/2025/MDN/..." />
         </Form.Item>
-
         <Form.Item
           name="title"
           label="Title"
           rules={[{ required: true, message: "Title is required" }]}
         >
-          <Input placeholder="Datacenter acquisition, spare parts, etc." />
+          <Input placeholder="Datacenter equipment acquisition" />
         </Form.Item>
-
-        <Form.Item name="reference_no" label="Reference number">
-          <Input placeholder="AO-01/2025/MDN/..." />
+        <Form.Item name="client_name" label="Client">
+          <Input placeholder="Ministry of Defense" />
         </Form.Item>
-
-        <Form.Item name="currency" label="Currency">
-          <Input placeholder="DZD" />
-        </Form.Item>
-
-        <Form.Item name="status" label="Status">
+        <Form.Item name="status" label="Status" initialValue="draft">
           <Select>
-            <Option value="IDENTIFIED">IDENTIFIED</Option>
-            <Option value="STUDYING">STUDYING</Option>
-            <Option value="SUBMITTED">SUBMITTED</Option>
-            <Option value="WON">WON</Option>
-            <Option value="LOST">LOST</Option>
+            <Option value="draft">Draft</Option>
+            <Option value="in_study">In study</Option>
+            <Option value="go">Go</Option>
+            <Option value="submitted">Submitted</Option>
+            <Option value="won">Won</Option>
+            <Option value="lost">Lost</Option>
           </Select>
         </Form.Item>
-
         <Form.Item name="submission_deadline" label="Submission deadline">
-          <DatePicker
-            showTime
-            style={{ width: "100%" }}
-            placeholder="Select submission date & time"
-          />
+          <DatePicker style={{ width: "100%" }} />
         </Form.Item>
-
         <Form.Item>
           <Space>
             <Button onClick={() => navigate(-1)}>Cancel</Button>

@@ -1,20 +1,28 @@
 import { Tag } from "antd";
 import type { TenderStatus } from "../../types";
 
-const statusConfig: Record<
-  TenderStatus,
-  { color: string; label: string }
-> = {
-  draft: { color: "default", label: "Draft" },
-  in_study: { color: "processing", label: "In study" },
-  go: { color: "blue", label: "Go" },
-  submitted: { color: "gold", label: "Submitted" },
-  won: { color: "green", label: "Won" },
-  lost: { color: "red", label: "Lost" }
+const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
+  IDENTIFIED: { color: "default", label: "Identified" },
+  BOUGHT: { color: "purple", label: "Bought" },
+  STUDYING: { color: "orange", label: "Studying" },
+  SUBMITTED: { color: "blue", label: "Submitted" },
+  WON: { color: "green", label: "Won" },
+  LOST: { color: "red", label: "Lost" }
 };
 
-export function StatusTag({ status }: { status?: TenderStatus }) {
-  if (!status) return <Tag>Unknown</Tag>;
-  const cfg = statusConfig[status];
-  return <Tag color={cfg.color}>{cfg.label}</Tag>;
+interface StatusTagProps {
+  status?: TenderStatus | null;
+}
+
+export function StatusTag({ status }: StatusTagProps) {
+  // Normalize just in case backend sends lowercase or extra spaces
+  const normalized = (status || "").toString().trim().toUpperCase();
+
+  const meta =
+    STATUS_CONFIG[normalized] || {
+      color: "default",
+      label: status ?? "UNKNOWN"
+    };
+
+  return <Tag color={meta.color}>{meta.label}</Tag>;
 }

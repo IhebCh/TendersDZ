@@ -1,9 +1,8 @@
-// src/pages/tenders/TenderDetails.tsx
-
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Card, Descriptions, Space, Button, message, Tag } from "antd";
+import { Card, Descriptions, Space, Button, message } from "antd";
 import { PageHeader } from "../../components/common/PageHeader";
+import { StatusTag } from "../../components/common/StatusTag";
 import type { Tender } from "../../types";
 import { del, get } from "../../api/client";
 
@@ -62,25 +61,26 @@ export function TenderDetails() {
       <Card loading={loading}>
         {data && (
           <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="ID">{data.id}</Descriptions.Item>
-            <Descriptions.Item label="Client ID">
-              {data.client_id}
+            <Descriptions.Item label="Reference">
+              {data.reference}
             </Descriptions.Item>
             <Descriptions.Item label="Title">
               {data.title}
             </Descriptions.Item>
-            <Descriptions.Item label="Reference number">
-              {data.reference_no || "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Currency">
-              {data.currency}
+            <Descriptions.Item label="Client">
+              {data.client_name || "-"}
             </Descriptions.Item>
             <Descriptions.Item label="Status">
-              <Tag>{data.status}</Tag>
+              <StatusTag status={data.status} />
             </Descriptions.Item>
             <Descriptions.Item label="Submission deadline">
               {data.submission_deadline
-                ? new Date(data.submission_deadline).toLocaleString()
+                ? new Date(data.submission_deadline).toLocaleDateString()
+                : "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Created at">
+              {data.created_at
+                ? new Date(data.created_at).toLocaleString()
                 : "-"}
             </Descriptions.Item>
           </Descriptions>

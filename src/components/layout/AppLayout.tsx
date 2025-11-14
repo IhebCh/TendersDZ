@@ -32,7 +32,9 @@ export function AppLayout({ children }: AppLayoutProps) {
     navigate("/login");
   };
 
-  const layoutContent = <Content className="app-content">{children}</Content>;
+  const layoutContent = (
+    <Content className="app-content">{children}</Content>
+  );
 
   if (isLogin) {
     return <Layout style={{ minHeight: "100vh" }}>{layoutContent}</Layout>;

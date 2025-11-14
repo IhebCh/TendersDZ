@@ -65,8 +65,6 @@ export async function del<T>(url: string) {
   return res.data;
 }
 
-// src/api/client.ts
-
 interface LoginResponse {
   access_token: string;
   token_type?: string;
@@ -86,11 +84,9 @@ export async function loginApi(username: string, password: string) {
       "Content-Type": "application/x-www-form-urlencoded",
     },
   });
-
   if (res.data?.access_token) {
     setAuthToken(res.data.access_token);
   }
-
   return res.data;
 }
 
