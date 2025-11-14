@@ -1,94 +1,73 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import { AppLayout } from "./components/layout/AppLayout";
-import { Dashboard } from "./pages/Dashboard";
-import { TendersList } from "./pages/tenders/TendersList";
-import { TenderForm } from "./pages/tenders/TenderForm";
-import { TenderDetails } from "./pages/tenders/TenderDetails";
-import { SuppliersList } from "./pages/suppliers/SuppliersList";
-import { SupplierForm } from "./pages/suppliers/SupplierForm";
-import { LoginPage } from "./pages/auth/LoginPage";
-import { getAuthToken } from "./api/client";
+import React from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { LoginPage } from "./pages/LoginPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { ClientsPage } from "./pages/ClientsPage";
+import { SuppliersPage } from "./pages/SuppliersPage";
+import { TendersPage } from "./pages/TendersPage";
+import { TenderDetailsPage } from "./pages/TenderDetailsPage";
+import { RequireAuth } from "./components/RequireAuth";
+import { MainLayout } from "./components/MainLayout";
 
-function PrivateRoute({ children }: { children: JSX.Element }) {
-  const token = getAuthToken();
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-  return children;
-}
-
-function App() {
+export const App: React.FC = () => {
   return (
-    <AppLayout>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/tenders"
-          element={
-            <PrivateRoute>
-              <TendersList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/tenders/new"
-          element={
-            <PrivateRoute>
-              <TenderForm mode="create" />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/tenders/:id"
-          element={
-            <PrivateRoute>
-              <TenderDetails />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/tenders/:id/edit"
-          element={
-            <PrivateRoute>
-              <TenderForm mode="edit" />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/suppliers"
-          element={
-            <PrivateRoute>
-              <SuppliersList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/suppliers/new"
-          element={
-            <PrivateRoute>
-              <SupplierForm mode="create" />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/suppliers/:id/edit"
-          element={
-            <PrivateRoute>
-              <SupplierForm mode="edit" />
-            </PrivateRoute>
-          }
-        />
-      </Routes>
-    </AppLayout>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/"
+            element={
+              <RequireAuth>
+                <MainLayout>
+                  <DashboardPage />
+                </MainLayout>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/clients"
+            element={
+              <RequireAuth>
+                <MainLayout>
+                  <ClientsPage />
+                </MainLayout>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/suppliers"
+            element={
+              <RequireAuth>
+                <MainLayout>
+                  <SuppliersPage />
+                </MainLayout>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/tenders"
+            element={
+              <RequireAuth>
+                <MainLayout>
+                  <TendersPage />
+                </MainLayout>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/tenders/:id"
+            element={
+              <RequireAuth>
+                <MainLayout>
+                  <TenderDetailsPage />
+                </MainLayout>
+              </RequireAuth>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
-}
-
-export default App;
+};

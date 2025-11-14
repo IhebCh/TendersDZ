@@ -1,95 +1,149 @@
 import axios from "axios";
+import type {
+  AuthTokenResponse,
+  Client,
+  Supplier,
+  Tender,
+  TenderItem
+} from "../types";
 
-const baseURL =
+export const baseURL =
   (import.meta as any).env.VITE_API_BASE_URL || "http://localhost:8000";
 
-let authToken: string | null = localStorage.getItem("auth_token");
-
-export function setAuthToken(token: string | null) {
-  authToken = token;
-  if (token) {
-    localStorage.setItem("auth_token", token);
-  } else {
-    localStorage.removeItem("auth_token");
-  }
-}
-
-export function getAuthToken() {
-  return authToken;
-}
-
-export const apiClient = axios.create({
-  baseURL,
-  headers: {
-    "Content-Type": "application/json"
-  }
+const api = axios.create({
+  baseURL
 });
 
-apiClient.interceptors.request.use((config) => {
-  if (authToken) {
-    config.headers = config.headers || {};
-    (config.headers as any).Authorization = `Bearer ${authToken}`;
+// Attach Authorization header when token exists
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("tendersdz_token");
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers["Authorization"] = `Bearer ${token}`;
   }
   return config;
 });
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      if (!window.location.pathname.startsWith("/login")) {
-        window.location.href = "/login";
-      }
-    }
-    return Promise.reject(error);
-  }
-);
+export async function loginApi(
+  username: string,
+  password: string
+): Promise<AuthTokenResponse> {
+  const body = new URLSearchParams();
+  body.append("username", username);
+  body.append("password", password);
 
-export async function get<T>(url: string) {
-  const res = await apiClient.get<T>(url);
-  return res.data;
-}
-
-export async function post<T>(url: string, data: unknown) {
-  const res = await apiClient.post<T>(url, data);
-  return res.data;
-}
-
-export async function put<T>(url: string, data: unknown) {
-  const res = await apiClient.put<T>(url, data);
-  return res.data;
-}
-
-export async function del<T>(url: string) {
-  const res = await apiClient.delete<T>(url);
-  return res.data;
-}
-
-interface LoginResponse {
-  access_token: string;
-  token_type?: string;
-  [key: string]: any;
-}
-
-export async function loginApi(username: string, password: string) {
-  const data = new URLSearchParams();
-  data.append("username", username);
-  data.append("password", password);
-  // Optional extras if you ever need them:
-  // data.append("scope", "");
-  // data.append("grant_type", "");
-
-  const res = await apiClient.post<LoginResponse>("/auth/login", data, {
+  const { data } = await api.post<AuthTokenResponse>("/auth/login", body, {
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
+      "Content-Type": "application/x-www-form-urlencoded"
+    }
   });
-  if (res.data?.access_token) {
-    setAuthToken(res.data.access_token);
-  }
-  return res.data;
+  return data;
 }
 
-export function logout() {
-  setAuthToken(null);
+// ---- Clients ----
+export async function fetchClients(): Promise<Client[]> {
+  const { data } = await api.get<Client[]>("/clients/");
+  return data;
+}
+
+export async function createClient(payload: Omit<Client, "id">): Promise<Client> {
+  const { data } = await api.post<Client>("/clients/", payload);
+  return data;
+}
+
+export async function updateClient(
+  id: number,
+  payload: Partial<Omit<Client, "id">>
+): Promise<Client> {
+  const { data } = await api.put<Client>(`/clients/${id}`, payload);
+  return data;
+}
+
+export async function deleteClient(id: number): Promise<void> {
+  await api.delete(`/clients/${id}`);
+}
+
+// ---- Suppliers ----
+export async function fetchSuppliers(): Promise<Supplier[]> {
+  const { data } = await api.get<Supplier[]>("/suppliers/");
+  return data;
+}
+
+export async function createSupplier(
+  payload: Omit<Supplier, "id">
+): Promise<Supplier> {
+  const { data } = await api.post<Supplier>("/suppliers/", payload);
+  return data;
+}
+
+export async function updateSupplier(
+  id: number,
+  payload: Partial<Omit<Supplier, "id">>
+): Promise<Supplier> {
+  const { data } = await api.put<Supplier>(`/suppliers/${id}`, payload);
+  return data;
+}
+
+export async function deleteSupplier(id: number): Promise<void> {
+  await api.delete(`/suppliers/${id}`);
+}
+
+// ---- Tenders ----
+export async function fetchTenders(): Promise<Tender[]> {
+  const { data } = await api.get<Tender[]>("/tenders/");
+  return data;
+}
+
+export async function fetchTender(id: number): Promise<Tender> {
+  const { data } = await api.get<Tender>(`/tenders/${id}`);
+  return data;
+}
+
+export async function createTender(
+  payload: Omit<Tender, "id">
+): Promise<Tender> {
+  const { data } = await api.post<Tender>("/tenders/", payload);
+  return data;
+}
+
+export async function updateTender(
+  id: number,
+  payload: Partial<Omit<Tender, "id">>
+): Promise<Tender> {
+  const { data } = await api.put<Tender>(`/tenders/${id}`, payload);
+  return data;
+}
+
+export async function deleteTender(id: number): Promise<void> {
+  await api.delete(`/tenders/${id}`);
+}
+
+// ---- Tender Items ----
+export async function fetchTenderItems(
+  tenderId?: number
+): Promise<TenderItem[]> {
+  // If your backend supports filtering by ?tender_id= you can enable it here.
+  const { data } = await api.get<TenderItem[]>(
+    tenderId ? `/tender_items/?tender_id=${tenderId}` : "/tender_items/"
+  );
+  return data;
+}
+
+export async function createTenderItem(
+  payload: Omit<TenderItem, "id">
+): Promise<TenderItem> {
+  const { data } = await api.post<TenderItem>("/tender_items/", payload);
+  return data;
+}
+
+export async function updateTenderItem(
+  id: number,
+  payload: Partial<Omit<TenderItem, "id">>
+): Promise<TenderItem> {
+  const { data } = await api.put<TenderItem>(`/tender_items/${id}`, payload);
+  return data;
+}
+
+export async function deleteTenderItem(id: number): Promise<void> {
+  await api.delete(`/tender_items/${id}`);
 }
